@@ -126,16 +126,11 @@ WU_E_UH_INVALIDMETADATA,0x80242006,A handler operation could not be completed be
 ERROR_FAIL_REBOOT_REQUIRED,0x80070BC9,The requested operation failed. Restart the system to roll back changes made.
 BG_E_VALIDATION_FAILED,0x80200053,No Description
 TIME_OUT_ERRORS,0x80072EFD,The operation timed out
-TIME_OUT_ERRORS,0x80072EFE,The operation timed out
 TIME_OUT_ERRORS,0x80D02002,The operation timed out
 ERROR_INVALID_DATA,0X8007000D,Indicates data that isn't valid was downloaded or corruption occurred.
 USO_E_SERVICE_SHUTTING_DOWN,0x8024A10A,Indicates that the Windows Update Service is shutting down.
-WU_E_NO_INTERACTIVE_USER,0x80240020,Operation did not complete because no interactive user is signed in.
 WU_E_UH_POSTREBOOTSTILLPENDING,0x80242014,The post-restart operation for the update is still in progress.
 WU_E_DM_UNAUTHORIZED_LOCAL_USER,0x80246017,The download failed because the local user was denied authorization to download the content.
-WU_E_CALL_CANCELLED,0x8024000B,Operation was canceled.
-WU_E_XML_INVALID,0x8024000E,Windows Update Agent found information in the update's XML data that isn't valid.
-WU_E_SETUP_SKIP_UPDATE,0x8024D009,An update to the Windows Update Agent was skipped due to a directive in the Wuident.cab file.
 WU_E_PT_SOAPCLIENT_SOAPFAULT,0x80244007,SOAP client failed because there was a SOAP fault for reasons of WU_E_PT_SOAP_* error codes.
 WU_S_NOT_RUNNING,0x80070422,Windows Update Service not running/working.
 CBS_E_ABORT,0x800f0821,CBS transaction timeout exceeded.
@@ -152,6 +147,3 @@ ERROR_SXS_TRANSACTION_CLOSURE_INCOMPLETE,0x8007371b,One or more required members
 WININET_E_CONNECTION_ABORTED,0x80072EFE,The connection with the server was closed abnormally.  BITS is unable to transfer the file successfully.
 WININET_E_DECODING_FAILED,0x80072F8F,Content decoding has failed.  TLS 1.2 is not configured correctly on the client.
 WININET_E_TIMEOUT,0x80072EE2,The operation timed out.  Unable to scan for updates due to a connectivity issue to Windows Update, Configuration Manager, or WSUS.
-WU_E_ALL_UPDATES_FAILED,0x80240022,Operation failed for all the updates.  Multiple root causes for this error.
-WU_E_PT_HTTP_STATUS_PROXY_AUTH_REQ,0x8024401B,Same as HTTP status 407.  Proxy authentication is required.  Unable to authenticate through a proxy server. 	
-WU_E_PT_HTTP_STATUS_SERVICE_UNAVAILABLE,0x80244022,Same as HTTP status 503.  The service is temporarily overloaded.  Unable to connect to the configured update source.
