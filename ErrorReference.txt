@@ -96,23 +96,23 @@ WU_E_OUTOFRANGE,0x80240049,The data is out of range.
 WU_E_SETUP_IN_PROGRESS,0x8024004A,WUA operations are not available while operating system setup is running.
 WU_E_UNEXPECTED,0x80240FFF,An operation failed due to reasons not covered by another error code.
 WU_E_WINHTTP_INVALID_FILE,0x80240038,The downloaded file has an unexpected content type.
-WU_E_PT_HTTP_STATUS_BAD_REQUEST,0x80244016,Same as HTTP status 400 – The server could not process the request due to invalid syntax.
-WU_E_PT_HTTP_STATUS_DENIED,0x80244017,Same as HTTP status 401 – The requested resource requires user authentication.
-WU_E_PT_HTTP_STATUS_FORBIDDEN,0x80244018,Same as HTTP status 403 – Server understood the request, but declines to fulfill it.
-WU_E_PT_HTTP_STATUS_NOT_FOUND,0x80244019,Same as HTTP status 404 – The server cannot find the requested URI (Uniform Resource Identifier).
-WU_E_PT_HTTP_STATUS_BAD_METHOD,0x8024401A,Same as HTTP status 405 – The HTTP method is not allowed.
-WU_E_PT_HTTP_STATUS_PROXY_AUTH_REQ,0x8024401B,Same as HTTP status 407 – Proxy authentication is required.
-WU_E_PT_HTTP_STATUS_REQUEST_TIMEOUT,0x8024401C,Same as HTTP status 408 – The server timed out waiting for the request.
-WU_E_PT_HTTP_STATUS_CONFLICT,0x8024401D,Same as HTTP status 409 – The request was not completed due to a conflict with the current state of the resource.
-WU_E_PT_HTTP_STATUS_GONE,0x8024401E,Same as HTTP status 410 – Requested resource is no longer available at the server.
-WU_E_PT_HTTP_STATUS_SERVER_ERROR,0x8024401F,Same as HTTP status 500 – An error internal to the server prevented fulfilling the request.
-WU_E_PT_HTTP_STATUS_NOT_SUPPORTED,0x80244020,Same as HTTP status 501 – Server does not support the functionality required to fulfill the request.
-WU_E_PT_HTTP_STATUS_BAD_GATEWAY,0x80244021,Same as HTTP status 502 – The server, while acting as a gateway or proxy, received an invalid response from the upstream server it accessed in attempting to fulfill the request.
-WU_E_PT_HTTP_STATUS_SERVICE_UNAVAIL,0x80244022,Same as HTTP status 503 – The service is temporarily overloaded.
-WU_E_PT_HTTP_STATUS_GATEWAY_TIMEOUT,0x80244023,Same as HTTP status 504 – The request was timed out waiting for a gateway.
-WU_E_PT_HTTP_STATUS_VERSION_NOT_SUP,0x80244024,Same as HTTP status 505 – The server does not support the HTTP protocol version used for the request.
+WU_E_PT_HTTP_STATUS_BAD_REQUEST,0x80244016,Same as HTTP status 400.  The server could not process the request due to invalid syntax.
+WU_E_PT_HTTP_STATUS_DENIED,0x80244017,Same as HTTP status 401.  The requested resource requires user authentication.
+WU_E_PT_HTTP_STATUS_FORBIDDEN,0x80244018,Same as HTTP status 403.  Server understood the request, but declines to fulfill it.
+WU_E_PT_HTTP_STATUS_NOT_FOUND,0x80244019,Same as HTTP status 404.  The server cannot find the requested URI (Uniform Resource Identifier).
+WU_E_PT_HTTP_STATUS_BAD_METHOD,0x8024401A,Same as HTTP status 405.  The HTTP method is not allowed.
+WU_E_PT_HTTP_STATUS_PROXY_AUTH_REQ,0x8024401B,Same as HTTP status 407.  Proxy authentication is required.
+WU_E_PT_HTTP_STATUS_REQUEST_TIMEOUT,0x8024401C,Same as HTTP status 408.  The server timed out waiting for the request.
+WU_E_PT_HTTP_STATUS_CONFLICT,0x8024401D,Same as HTTP status 409.  The request was not completed due to a conflict with the current state of the resource.
+WU_E_PT_HTTP_STATUS_GONE,0x8024401E,Same as HTTP status 410.  Requested resource is no longer available at the server.
+WU_E_PT_HTTP_STATUS_SERVER_ERROR,0x8024401F,Same as HTTP status 500.  An error internal to the server prevented fulfilling the request.
+WU_E_PT_HTTP_STATUS_NOT_SUPPORTED,0x80244020,Same as HTTP status 501.  Server does not support the functionality required to fulfill the request.
+WU_E_PT_HTTP_STATUS_BAD_GATEWAY,0x80244021,Same as HTTP status 502.  The server, while acting as a gateway or proxy, received an invalid response from the upstream server it accessed in attempting to fulfill the request.
+WU_E_PT_HTTP_STATUS_SERVICE_UNAVAIL,0x80244022,Same as HTTP status 503.  The service is temporarily overloaded.
+WU_E_PT_HTTP_STATUS_GATEWAY_TIMEOUT,0x80244023,Same as HTTP status 504.  The request was timed out waiting for a gateway.
+WU_E_PT_HTTP_STATUS_VERSION_NOT_SUP,0x80244024,Same as HTTP status 505.  The server does not support the HTTP protocol version used for the request.
 WU_E_PT_HTTP_STATUS_NOT_MAPPED,0x8024402B,The request could not be completed and the reason did not correspond to any of the WU_E_PT_HTTP_* error codes.
-WU_E_PT_WINHTTP_NAME_NOT_RESOLVED,0x8024402C,Same as ERROR_WINHTTP_NAME_NOT_RESOLVED - The proxy server or target server name cannot be resolved.
+WU_E_PT_WINHTTP_NAME_NOT_RESOLVED,0x8024402C,Same as ERROR_WINHTTP_NAME_NOT_RESOLVED.  The proxy server or target server name cannot be resolved.
 WU_E_DRV_PRUNED,0x8024C001,A driver was skipped.
 WU_E_DRV_NOPROP_OR_LEGACY,0x8024C002,A property for the driver could not be found. It may not conform with required specifications.
 WU_E_DRV_REG_MISMATCH,0x8024C003,The registry type read for the driver does not match the expected type.
@@ -151,7 +151,7 @@ ERROR_SXS_ASSEMBLY_MISSING,0x80073701,The referenced assembly could not be found
 ERROR_SXS_TRANSACTION_CLOSURE_INCOMPLETE,0x8007371b,One or more required members of the transaction are not present.  Component Store corruption.
 WININET_E_CONNECTION_ABORTED,0x80072EFE,The connection with the server was closed abnormally.  BITS is unable to transfer the file successfully.
 WININET_E_DECODING_FAILED,0x80072F8F,Content decoding has failed.  TLS 1.2 is not configured correctly on the client.
-WININET_E_TIMEOUT,0x80072EE2,The operation timed out. 	Unable to scan for updates due to a connectivity issue to Windows Update, Configuration Manager, or WSUS.
+WININET_E_TIMEOUT,0x80072EE2,The operation timed out.  Unable to scan for updates due to a connectivity issue to Windows Update, Configuration Manager, or WSUS.
 WU_E_ALL_UPDATES_FAILED,0x80240022,Operation failed for all the updates.  Multiple root causes for this error.
-WU_E_PT_HTTP_STATUS_PROXY_AUTH_REQ,0x8024401B,Same as HTTP status 407 - proxy authentication is required.  Unable to authenticate through a proxy server. 	
-WU_E_PT_HTTP_STATUS_SERVICE_UNAVAILABLE,0x80244022,Same as HTTP status 503 - the service is temporarily overloaded.  Unable to connect to the configured update source.
+WU_E_PT_HTTP_STATUS_PROXY_AUTH_REQ,0x8024401B,Same as HTTP status 407.  Proxy authentication is required.  Unable to authenticate through a proxy server. 	
+WU_E_PT_HTTP_STATUS_SERVICE_UNAVAILABLE,0x80244022,Same as HTTP status 503.  The service is temporarily overloaded.  Unable to connect to the configured update source.
