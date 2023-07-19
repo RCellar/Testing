@@ -1,0 +1,21 @@
+Function Call-SCClientAction {
+    [CmdletBinding()]
+    param (
+        [Parameter()][System.Management.Automation.PSCredential]$Credential,
+        [Parameter(Mandatory=$true)]
+        [ValidateSet('HardwareInventory','SoftwareInventory','HeartbeatDiscovery','ApplicationDeployment','MachinePolicyAssignments','MachinePolicyEval')]$Trigger
+    )
+
+    $Trigger | ForEach { 
+        Switch ($_) {
+            'HardwareInventory'  {$Action = '{00000000-0000-0000-0000-000000000001}'}
+            'SoftwareInventory'  {$Action ='{00000000-0000-0000-0000-000000000002}'}
+            'HeartbeatDiscovery'  {$Action = '{00000000-0000-0000-0000-000000000003}'}
+            'ApplicationDeploymentEval'  {$Action = '{00000000-0000-0000-0000-000000000121}'}
+            'MachinePolicyAssignmentsReq'  {$Action = '{00000000-0000-0000-0000-000000000021}'}
+            'MachinePolicyEval'  {$Action = '{00000000-0000-0000-0000-000000000022}'}
+        }
+        
+        Invoke-WMIMethod -Namespace root\ccm -Class SMS_Client -Name TriggerSchedule "`"$Action`"" -ErrorAction Stop
+    }
+}
