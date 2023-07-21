@@ -1,0 +1,1 @@
+(Get-WinEvent -FilterXPath 'Event[System[EventID=4673] and EventData[Data[@Name="ProcessName"]="C:\Windows\System32\WindowsPowerShell\v1.0\powershell_ise.exe"]]')
