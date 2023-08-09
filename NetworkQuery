@@ -1,0 +1,3 @@
+$II = (Get-CimInstance Win32_NetworkAdapter -Filter "netconnectionstatus = 2").InterfaceIndex
+$IPAddressList = (Get-CimInstance Win32_NetworkAdapterConfiguration | Where-Object {$_.InterfaceIndex -eq $II}).IPAddress
+$IPs = ($IPAddressList | Select-String -Pattern "\d+\.\d+\.\d+\.\d+" -AllMatches).Line
