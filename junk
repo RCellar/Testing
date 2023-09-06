@@ -1,1 +1,67 @@
 (Get-WinEvent -FilterXPath 'Event[System[EventID=4673] and EventData[Data[@Name="ProcessName"]="C:\Windows\System32\WindowsPowerShell\v1.0\powershell_ise.exe"]]')
+
+Function New-Template {
+    param(
+        [Switch]$Output,
+        [String]$OutputPath
+    )
+
+$Template = @"
+[
+    {
+        "Title": "<Name of Scheduled Task>",
+        "Action": "<Base64 Script Content>",
+        "Description": "<Text for Description>",
+        "TriggerType": [{
+            "Daily": {
+                "StartTime": "09:00",
+                "Duration": "23H",
+                "Repetition": "6H",
+                "DaysInterval": 1,
+                "ExecutionTimeLimit": "20M",
+                "RandomDelay": "10M"
+            },
+            "Once": {
+                "StartTime": "07:00",
+                "Duration": "",
+                "Repetition": "",
+                "ExecutionTimeLimit": "30M",
+                "RandomDelay": "10M"
+            },
+            "OnEvent": [{
+                "LogPath": "Microsoft-Windows-Audio/PlaybackManager",
+                "EventID": "22"
+            },
+            {
+                "LogPath": "Microsoft-Windows-Audio/PlaybackManager",
+                "EventID": "23"
+            }],
+            "AtLogon": {
+                "Delay": "",
+                "ExecutionTimeLimit": "30M"
+            },
+            "OnLock": {
+                "Delay": "",
+                "ExecutionTimeLimit": "30M"
+            },
+            "OnUnlock": {
+                "Delay": "",
+                "ExecutionTimeLimit": "30M"
+            },
+            "AtStartup": {
+                "Delay": "",
+                "ExecutionTimeLimit": "30M"
+            }
+        }],
+        "pwsh": false,
+        "Transmit": true
+    }
+]
+"@
+    #$Triggers #| ConvertTo-Json -Depth 2
+    if ($Output) {
+        if (!($OutputPath)) {$OutputPath = $PSScriptRoot}
+        $Template.TrimEnd() | Set-Content -Path $OutputPath\template.json
+    }
+    else {$Template}
+}
