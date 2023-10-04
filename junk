@@ -65,3 +65,12 @@ $Template = @"
     }
     else {$Template}
 }
+
+Import-Module BurntToast
+$Image = 'E:\Backups\Pictures\1436572070936.jpg'
+
+$Dismiss = New-BTButton -Dismiss
+$GoTo = New-BTButton -Content 'Search' -Arguments 'https://www.google.com'
+New-BTButton -
+
+New-BurntToastNotification -Text "Demonstration","A simple test to show the capabilities of the module." -Button $Dismiss,$GoTo -HeroImage $Image -ActivatedAction {"Testing" | Out-File C:\Temp\Test.txt} -Sound SMS
