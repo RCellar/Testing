@@ -83,15 +83,15 @@ Function ESPInstallerType {
 
     $SourcePath = $SourcePath -replace "^(.*[\\\/])",""
     Switch($Type) {
-        "MSI"   {$Process = "C:\Windows\System32\msiexec.exe /i `"$PSScriptRoot\$SourcePath\$InstallFile`""}
+        "MSI"   {$Process = "msiexec.exe /i `"$PSScriptRoot\$SourcePath\$InstallFile`""}
         "EXE"   {$Process = "$PSScriptRoot\$SourcePath\$InstallFile"}
-        "Script"    {$Process = "C:\Windows\System32\powershell.exe -ExecutionPolicy Bypass -NoLogo -NoProfile -File `"$PSScriptRoot\$SourcePath\$InstallFile`""}
+        "Script"    {$Process = "powershell.exe -ExecutionPolicy Bypass -NoLogo -NoProfile -File `"$PSScriptRoot\$SourcePath\$InstallFile`""}
     }
     
 $OutputStr = @"
 ###$($Title)
 ###$($Version)
-`$Process = Start-Process "$Process" -Arguments "$Arguments" -Wait -Passthrough
+`$Process = Start-Process "$Process" -WindowStyle Hidden -Arguments "$Arguments" -Wait -Passthrough
 if (`$Process.ExitCode -ne 0){
     if ("$Behavior" -eq "Stop") {
         Exit 1
