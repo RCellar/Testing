@@ -1,13 +1,13 @@
 Function ESPInstaller {
     param(
-        [ValidateSet("Script","MSI","EXE")]$Type,
-        [Parameter(ValueFromPipelineByPropertyName)][String]$Title,
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][ValidateSet("Script","MSI","EXE")]$Type,
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$Title,
         [Parameter(ValueFromPipelineByPropertyName)][String]$Version,
-        [Parameter(ValueFromPipelineByPropertyName)][String]$SourcePath,
-        [Parameter(ValueFromPipelineByPropertyName)][String]$InstallFile,
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$SourcePath,
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$InstallFile,
         [Parameter(ValueFromPipelineByPropertyName)][String]$Arguments,
-        [Parameter(ValueFromPipelineByPropertyName)][String]$Validation,
-        [Parameter(ValueFromPipelineByPropertyName)][ValidateSet('Continue','Stop')]$Behavior
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$Validation,
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][ValidateSet('Continue','Stop')]$Behavior
     )
 
     [PSCustomObject]@{
@@ -71,14 +71,14 @@ Function ESPCondense {
 
 Function ESPInstallerType {
     param(
-        [ValidateSet("Script","MSI","EXE")]$Type,
-        [Parameter(ValueFromPipelineByPropertyName)][String]$Title,
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][ValidateSet("Script","MSI","EXE")]$Type,
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$Title,
         [Parameter(ValueFromPipelineByPropertyName)][String]$Version,
-        [Parameter(ValueFromPipelineByPropertyName)][String]$SourcePath,
-        [Parameter(ValueFromPipelineByPropertyName)][String]$InstallFile,
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$SourcePath,
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$InstallFile,
         [Parameter(ValueFromPipelineByPropertyName)][String]$Arguments,
-        [Parameter(ValueFromPipelineByPropertyName)][String]$Validation,
-        [Parameter(ValueFromPipelineByPropertyName)][ValidateSet('Continue','Stop')]$Behavior
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$Validation,
+        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][ValidateSet('Continue','Stop')]$Behavior
     )
 
     $SourcePath = $SourcePath -replace "^(.*[\\\/])",""
