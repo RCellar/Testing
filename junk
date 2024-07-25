@@ -124,3 +124,16 @@ if (`$Process.ExitCode -ne 0 -and `$Process.ExitCode -ne 1707){
 
 Return $OutputStr
 }
+
+<Configuration>
+    <MappedFolders>
+    <MappedFolder>
+        <HostFolder>C:\Testing\TestLocalize</HostFolder>
+        <SandboxFolder>C:\Temp</SandboxFolder>
+        <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+    </MappedFolders>
+    <LogonCommand>
+        <Command>powershell.exe -ExecutionPolicy Bypass -File C:\Temp\Install.ps1</Command>
+    </LogonCommand>
+</Configuration>
