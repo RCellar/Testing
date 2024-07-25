@@ -6,7 +6,7 @@ Function ESPInstaller {
         [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$SourcePath,
         [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$InstallFile,
         [Parameter(ValueFromPipelineByPropertyName)][String]$Arguments,
-        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$Validation,
+        [Parameter(ValueFromPipelineByPropertyName)][String]$Validation,
         [Parameter(ValueFromPipelineByPropertyName,Mandatory)][ValidateSet('Continue','Stop')]$Behavior
     )
 
@@ -40,16 +40,21 @@ Function ESPIngest {
 
 Function ESPLocalize {
     param(
-        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$CSVPath,
-        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$OutputPath,
+        [Parameter(ValueFromPipeline,Mandatory)][String]$CSVPath,
+        [Parameter(Mandatory)][String]$OutputPath,
         [Parameter(ValueFromPipelineByPropertyName)][PSCredential]$Credential
         
     )
 
     if (!(Test-Path $OutputPath)) {New-Item -ItemType Directory -Path $OutputPath}
+    
     $Ingest = ESPIngest -Path $CSVPath
     $Ingest | ForEach-Object {
-        if ($Credential) {Copy-Item $_.SourcePath $OutputPath -Recurse -Container -Credential $Credential}
+        if ($Credential) {
+            New-PSDrive -PSProvider FileSystem -Name FileCopy -Root $_.SourcePath -Credential $Credential
+            Copy-Item FileCopy:\ $OutputPath -Recurse -Container
+            Remove-PSDrive -Name FileCopy
+        }
         else {Copy-Item $_.SourcePath $OutputPath -Recurse -Container}
     }
     Set-Variable -Name "ESPCondenserPath" -Value $OutputPath -Scope Global
@@ -58,7 +63,7 @@ Function ESPLocalize {
 
 Function ESPCondense {
     param(
-        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$CSVPath
+        [Parameter(ValueFromPipeline,Mandatory)][String]$CSVPath
     )
     $Ingest = ESPIngest -Path $CSVPath
     $Ingest | ForEach-Object {
@@ -66,6 +71,12 @@ Function ESPCondense {
         $InstallString = $InstallString + $Install
         $Install = $Null
     }
+
+    $AppendStatement = @'
+Write-Output 'Installed'
+"Installed" | Set-Content C:\Temp\APComplete.txt
+'@
+    $InstallString = $InstallString + $AppendStatement
     $InstallString | Set-Content $ESPCondenserPath\Install.ps1
 }
 
@@ -77,39 +88,39 @@ Function ESPInstallerType {
         [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$SourcePath,
         [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$InstallFile,
         [Parameter(ValueFromPipelineByPropertyName)][String]$Arguments,
-        [Parameter(ValueFromPipelineByPropertyName,Mandatory)][String]$Validation,
+        [Parameter(ValueFromPipelineByPropertyName)][String]$Validation,
         [Parameter(ValueFromPipelineByPropertyName,Mandatory)][ValidateSet('Continue','Stop')]$Behavior
     )
 
     $SourcePath = $SourcePath -replace "^(.*[\\\/])",""
     Switch($Type) {
-        "MSI"   {$Process = "msiexec.exe /i `"$PSScriptRoot\$SourcePath\$InstallFile`""}
-        "EXE"   {$Process = "$PSScriptRoot\$SourcePath\$InstallFile"}
-        "Script"    {$Process = "powershell.exe -ExecutionPolicy Bypass -NoLogo -NoProfile -File `"$PSScriptRoot\$SourcePath\$InstallFile`""}
+        "MSI"       {$Process = "C:\Windows\System32\msiexec.exe"; 
+                    $Arguments = @('/i', ("```"`$(`$PSScriptRoot)\" + "$SourcePath\$InstallFile" + '`" ') , $Arguments ) }
+        "EXE"       {$Process = "`$(`$PSScriptRoot)\$SourcePath\$InstallFile" }
+        "Script"    {$Process = "powershell.exe";
+                    $Arguments = '-ExecutionPolicy Bypass -NoLogo -NoProfile -File `"$($PSScriptRoot)\' + "$SourcePath\$InstallFile" + '`" ' + $Arguments }
     }
     
 $OutputStr = @"
 ###$($Title)
 ###$($Version)
-`$Process = Start-Process "$Process" -WindowStyle Hidden -Arguments "$Arguments" -Wait -Passthrough
-if (`$Process.ExitCode -ne 0){
+`$Arguments = "$Arguments"
+`$ProcessPath = "$Process"
+#`$WorkingDir = "`$(`$PSScriptRoot)\$SourcePath"
+#`$Process = & "`$ProcessPath `$Arguments" | Out-File C:\Windows\Temp\APInstaller.txt -Append
+`$Process = Start-Process `$ProcessPath -ArgumentList `$Arguments -Wait -PassThru
+#do {Start-Sleep -s 1} until (`$(`$Process.HasExited) -eq 'True')
+"`$(Get-Date -UFormat '%m/%d/%Y %R') : $($Title): Exit Code: `$(`$Process.ExitCode)" | Add-Content C:\Temp\APInstaller.txt
+#"ProcessPath: `$ProcessPath" | Add-Content C:\Temp\APInstaller.txt
+if (`$Process.ExitCode -ne 0 -and `$Process.ExitCode -ne 1707){
     if ("$Behavior" -eq "Stop") {
         Exit 1
     }
+`$Process = `$null
+`$Arguments = `$null
 }
+
 "@
 
 Return $OutputStr
 }
-
-$DataStamp = get-date -Format yyyyMMddTHHmmss
-$logFile = '{0}-{1}.log' -f $file.fullname,$DataStamp
-$MSIArguments = @(
-    "/i"
-    ('"{0}"' -f $file.fullname)
-    "/qn"
-    "/norestart"
-    "/L*v"
-    $logFile
-)
-Start-Process "msiexec.exe" -ArgumentList $MSIArguments -Wait -NoNewWindow 
