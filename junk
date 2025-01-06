@@ -1,1 +1,46 @@
+#!/bin/bash
 
+# Variables - replace with your own values
+TENANT_ID=""
+CLIENT_ID=""
+CLIENT_SECRET=""
+WORKSPACE_ID=""
+
+# Log Analytics query
+QUERY="union *"
+
+# Get access token
+TOKEN_RESPONSE=$(curl -s -X POST \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=$CLIENT_ID" \
+  -d "client_secret=$CLIENT_SECRET" \
+  -d "resource=https://api.loganalytics.io" \
+  "https://login.microsoftonline.com/$TENANT_ID/oauth2/token")
+
+ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
+
+# Check if access token was obtained
+if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
+  echo "Failed to obtain access token"
+  exit 1
+fi
+
+# Build the query JSON
+REQUEST_BODY=$(cat <<EOF
+{
+  "query": "$QUERY"
+}
+EOF
+)
+
+# Send the query to Log Analytics
+RESPONSE=$(curl -s -X POST \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "$REQUEST_BODY" \
+  "https://api.loganalytics.io/v1/workspaces/$WORKSPACE_ID/query")
+
+# Output the response
+echo "Query Response:"
+echo "$RESPONSE"
