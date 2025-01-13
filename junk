@@ -4,7 +4,10 @@ $MWRootPath = "HKLM:\Software\Testing"
 
 if (Test-Path $MWRootPath) {
     try {$MaintenanceWindows = Get-ItemProperty -Path $MWRootPath -ErrorAction Stop | Select * -ExcludeProperty PSPath, PSParentPath, PSChildName, PSDrive, PSProvider}
-    catch {}
+    catch { 
+        Write-Output 'No MWs Found'
+        Exit 0
+    }
 }
 
 $ResultArray = [System.Collections.Generic.List[Object]]@()
@@ -20,14 +23,22 @@ $MaintenanceWindows.PSObject.Properties | ForEach-Object {
     Write-Host $isInMaintenanceWindow
     $ResultArray.Add([PSCustomObject]@{
         isInMaintenanceWindow = $isInMaintenanceWindow
-        Begin = $Begin.Hour
-        End = $End.Hour
+        Begin = $Begin
+        End = $End
     })
     #if (!$isInMaintenanceWindow) {break}
 }
 
+$MWRootPath = $null
+$MaintenanceWindows = $null
+$MW = $null
+$Begin = $null
+$End = $null
+$CurrentHour = $null
+$isInMaintenanceWindow = $null
+
 # If the current time is within the maintenance window, exit with success code
-if ($isInMaintenanceWindow.isInMaintenanceWindow -notcontains $false) {
+if ($ResultArray.isInMaintenanceWindow -notcontains $false) {
     # Current time is within the maintenance window. Install the app
     Write-Host "Install at $(Get-Date -UFormat %R)"
     Write-Output -inputobject $isInMaintenanceWindow
