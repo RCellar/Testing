@@ -1,46 +1,88 @@
-#!/bin/bash
+# Get the current local time
+$CurrentHour = (Get-Date)
+$MWRootPath = "HKLM:\Software\Testing"
 
-# Variables - replace with your own values
-TENANT_ID=""
-CLIENT_ID=""
-CLIENT_SECRET=""
-WORKSPACE_ID=""
-
-# Log Analytics query
-QUERY="union *"
-
-# Get access token
-TOKEN_RESPONSE=$(curl -s -X POST \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials" \
-  -d "client_id=$CLIENT_ID" \
-  -d "client_secret=$CLIENT_SECRET" \
-  -d "resource=https://api.loganalytics.io" \
-  "https://login.microsoftonline.com/$TENANT_ID/oauth2/token")
-
-ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
-
-# Check if access token was obtained
-if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
-  echo "Failed to obtain access token"
-  exit 1
-fi
-
-# Build the query JSON
-REQUEST_BODY=$(cat <<EOF
-{
-  "query": "$QUERY"
+if (Test-Path $MWRootPath) {
+    try {$MaintenanceWindows = Get-ItemProperty -Path $MWRootPath -ErrorAction Stop | Select MW*}
+    catch {}
 }
-EOF
-)
 
-# Send the query to Log Analytics
-RESPONSE=$(curl -s -X POST \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "$REQUEST_BODY" \
-  "https://api.loganalytics.io/v1/workspaces/$WORKSPACE_ID/query")
+$MaintenanceWindows.PSObject.Properties | ForEach-Object {
+    Write-Host $_.Value
+    $MW = $_.Value -Split ","
+    $Begin = Get-Date "$($MW[0]):00"
+    $End = Get-Date "$($MW[1]):00"
+    if ($Begin -gt $End) {
+        $End = ($End).AddDays(1)
+    }
+    $isInMaintenanceWindow = ($CurrentHour -ge $Begin) -and ($CurrentHour -le $End)
+    Write-Host $isInMaintenanceWindow
+    if (!$isInMaintenanceWindow) {break}
+}
 
-# Output the response
-echo "Query Response:"
-echo "$RESPONSE"
+# If the current time is within the maintenance window, exit with success code
+if ($isInMaintenanceWindow) {
+    # Current time is within the maintenance window. Install the app
+    Write-Host "Install at $($intHour)"
+    Write-Output -inputobject $isInMaintenanceWindow
+    #Exit 0
+} else {
+    # Current time is not within the maintenance window. Do not install the app. Create a scheduled task to sync Intune during the MW in hopes of getting the app to install when we want it to.
+    Write-Host  "Do Not install at $($intHour)"
+    
+    # Define the folder and script path
+    $folderPath = "C:\Temp"
+    $scriptPath = "$folderPath\Invoke-IntuneSyncApp.ps1"
+
+    # Ensure the folder exists
+    if (-not (Test-Path -Path $folderPath)) {
+        New-Item -Path $folderPath -ItemType Directory | Out-Null
+    }
+
+    # Check for and delete any old script
+    if (Test-Path -Path $scriptPath) {
+        Remove-Item -Path $scriptPath -Force
+    }
+
+    # Create the PowerShell script
+    @"
+`$Shell = New-Object -ComObject Shell.Application
+`$Shell.open("intunemanagementextension://syncapp")
+"@ | Set-Content -Path $scriptPath
+    
+    # Define the task name
+    $taskName = "IntuneSyncApp"
+
+    # Check if the scheduled task already exists
+    $taskExists = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+
+    if ($null -eq $taskExists) {
+        try {
+            # Define the start time
+            $startTime = (Get-Date).Date.AddHours(23)  # 11 PM today
+
+            # Create and register the task with the EndBoundary set after creation
+            Register-ScheduledTask -TaskName $taskName -User "NT AUTHORITY\SYSTEM" -InputObject (
+                (
+                    New-ScheduledTask -Action (
+                        New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-noprofile -executionpolicy bypass -File `"$scriptPath`""
+                    ) -Trigger (
+                        New-ScheduledTaskTrigger -Once -At $startTime
+                    ) -Settings (
+                        New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1) -DeleteExpiredTaskAfter (New-TimeSpan -Minutes 1)
+                    )
+                ) | % { $_.Triggers[0].EndBoundary = $startTime.AddMinutes(60).ToString('s') ; $_ } # Run through a pipe to set the end boundary of the trigger
+            )
+
+            Write-Host  "Scheduled task '$taskName' created successfully."
+        } catch {
+            Write-Host  "Failed to create scheduled task '$taskName'. Error: $_"
+        }
+    } else {
+        Write-Host  "Scheduled task '$taskName' already exists. No action taken."
+    }
+
+    # Exit with false so the app does not install!
+    Write-Output -inputobject $isInMaintenanceWindow
+    Exit 0
+}
