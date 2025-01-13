@@ -3,32 +3,38 @@ $CurrentHour = (Get-Date)
 $MWRootPath = "HKLM:\Software\Testing"
 
 if (Test-Path $MWRootPath) {
-    try {$MaintenanceWindows = Get-ItemProperty -Path $MWRootPath -ErrorAction Stop | Select MW*}
+    try {$MaintenanceWindows = Get-ItemProperty -Path $MWRootPath -ErrorAction Stop | Select * -ExcludeProperty PSPath, PSParentPath, PSChildName, PSDrive, PSProvider}
     catch {}
 }
 
+$ResultArray = [System.Collections.Generic.List[Object]]@()
 $MaintenanceWindows.PSObject.Properties | ForEach-Object {
     Write-Host $_.Value
     $MW = $_.Value -Split ","
-    $Begin = Get-Date "$($MW[0]):00"
-    $End = Get-Date "$($MW[1]):00"
-    if ($Begin -gt $End) {
+    $Begin = Get-Date "$($MW[0])"
+    $End = Get-Date "$($MW[1])"
+    if (($Begin -gt $End) -and ($CurrentHour -ge $Begin) ) {
         $End = ($End).AddDays(1)
     }
     $isInMaintenanceWindow = ($CurrentHour -ge $Begin) -and ($CurrentHour -le $End)
     Write-Host $isInMaintenanceWindow
-    if (!$isInMaintenanceWindow) {break}
+    $ResultArray.Add([PSCustomObject]@{
+        isInMaintenanceWindow = $isInMaintenanceWindow
+        Begin = $Begin.Hour
+        End = $End.Hour
+    })
+    #if (!$isInMaintenanceWindow) {break}
 }
 
 # If the current time is within the maintenance window, exit with success code
-if ($isInMaintenanceWindow) {
+if ($isInMaintenanceWindow.isInMaintenanceWindow -notcontains $false) {
     # Current time is within the maintenance window. Install the app
-    Write-Host "Install at $($intHour)"
+    Write-Host "Install at $(Get-Date -UFormat %R)"
     Write-Output -inputobject $isInMaintenanceWindow
     #Exit 0
 } else {
     # Current time is not within the maintenance window. Do not install the app. Create a scheduled task to sync Intune during the MW in hopes of getting the app to install when we want it to.
-    Write-Host  "Do Not install at $($intHour)"
+    Write-Host  "Do Not install at $(Get-Date -UFormat %R)"
     
     # Define the folder and script path
     $folderPath = "C:\Temp"
