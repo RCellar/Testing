@@ -1,105 +1,64 @@
-# Get the current local time
-$CurrentHour = (Get-Date)
-$MWRootPath = "HKLM:\Software\Testing"
+# Function to get installed applications from a specific registry path
+function Get-InstalledAppsFromRegistryPath {
+    param (
+        [string]$RegistryPath,
+        [string]$Source
+    )
 
-if (Test-Path $MWRootPath) {
-    try {$MaintenanceWindows = Get-ItemProperty -Path $MWRootPath -ErrorAction Stop | Select * -ExcludeProperty PSPath, PSParentPath, PSChildName, PSDrive, PSProvider}
-    catch { 
-        Write-Output 'No MWs Found'
-        Exit 0
-    }
-}
-
-$ResultArray = [System.Collections.Generic.List[Object]]@()
-$MaintenanceWindows.PSObject.Properties | ForEach-Object {
-    Write-Host $_.Value
-    $MW = $_.Value -Split ","
-    $Begin = Get-Date "$($MW[0])"
-    $End = Get-Date "$($MW[1])"
-    if (($Begin -gt $End) -and ($CurrentHour -ge $Begin) ) {
-        $End = ($End).AddDays(1)
-    }
-    $isInMaintenanceWindow = ($CurrentHour -ge $Begin) -and ($CurrentHour -le $End)
-    Write-Host $isInMaintenanceWindow
-    $ResultArray.Add([PSCustomObject]@{
-        isInMaintenanceWindow = $isInMaintenanceWindow
-        Begin = $Begin
-        End = $End
-    })
-    #if (!$isInMaintenanceWindow) {break}
-}
-
-$MWRootPath = $null
-$MaintenanceWindows = $null
-$MW = $null
-$Begin = $null
-$End = $null
-$CurrentHour = $null
-$isInMaintenanceWindow = $null
-
-# If the current time is within the maintenance window, exit with success code
-if ($ResultArray.isInMaintenanceWindow -notcontains $false) {
-    # Current time is within the maintenance window. Install the app
-    Write-Host "Install at $(Get-Date -UFormat %R)"
-    Write-Output -inputobject $isInMaintenanceWindow
-    #Exit 0
-} else {
-    # Current time is not within the maintenance window. Do not install the app. Create a scheduled task to sync Intune during the MW in hopes of getting the app to install when we want it to.
-    Write-Host  "Do Not install at $(Get-Date -UFormat %R)"
-    
-    # Define the folder and script path
-    $folderPath = "C:\Temp"
-    $scriptPath = "$folderPath\Invoke-IntuneSyncApp.ps1"
-
-    # Ensure the folder exists
-    if (-not (Test-Path -Path $folderPath)) {
-        New-Item -Path $folderPath -ItemType Directory | Out-Null
-    }
-
-    # Check for and delete any old script
-    if (Test-Path -Path $scriptPath) {
-        Remove-Item -Path $scriptPath -Force
-    }
-
-    # Create the PowerShell script
-    @"
-`$Shell = New-Object -ComObject Shell.Application
-`$Shell.open("intunemanagementextension://syncapp")
-"@ | Set-Content -Path $scriptPath
-    
-    # Define the task name
-    $taskName = "IntuneSyncApp"
-
-    # Check if the scheduled task already exists
-    $taskExists = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-
-    if ($null -eq $taskExists) {
-        try {
-            # Define the start time
-            $startTime = (Get-Date).Date.AddHours(23)  # 11 PM today
-
-            # Create and register the task with the EndBoundary set after creation
-            Register-ScheduledTask -TaskName $taskName -User "NT AUTHORITY\SYSTEM" -InputObject (
-                (
-                    New-ScheduledTask -Action (
-                        New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-noprofile -executionpolicy bypass -File `"$scriptPath`""
-                    ) -Trigger (
-                        New-ScheduledTaskTrigger -Once -At $startTime
-                    ) -Settings (
-                        New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1) -DeleteExpiredTaskAfter (New-TimeSpan -Minutes 1)
-                    )
-                ) | % { $_.Triggers[0].EndBoundary = $startTime.AddMinutes(60).ToString('s') ; $_ } # Run through a pipe to set the end boundary of the trigger
-            )
-
-            Write-Host  "Scheduled task '$taskName' created successfully."
-        } catch {
-            Write-Host  "Failed to create scheduled task '$taskName'. Error: $_"
+    $apps = @()
+    if (Test-Path $RegistryPath) {
+        $keys = Get-ChildItem -Path $RegistryPath
+        foreach ($key in $keys) {
+            $app = Get-ItemProperty -Path $key.PSPath
+            $apps += [PSCustomObject]@{
+                Name = $app.DisplayName
+                Version = $app.DisplayVersion
+                Publisher = $app.Publisher
+                InstallDate = $app.InstallDate
+                User = $RegistryPath -replace 'HKEY_USERS\\', '' -replace '\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall', ''
+                Source = $Source
+            }
         }
-    } else {
-        Write-Host  "Scheduled task '$taskName' already exists. No action taken."
     }
-
-    # Exit with false so the app does not install!
-    Write-Output -inputobject $isInMaintenanceWindow
-    Exit 0
+    return $apps
 }
+
+# Function to translate SID to username
+function Get-UsernameFromSID {
+    param (
+        [string]$SID
+    )
+
+    try {
+        $user = New-Object System.Security.Principal.SecurityIdentifier($SID)
+        $user.Translate([System.Security.Principal.NTAccount]).Value
+    } catch {
+        $SID
+    }
+}
+
+# Main script
+$allApps = @()
+
+if (!(Get-PSDrive | ? {$_.Name -eq 'HKU'})) {New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS | Out-Null}
+$users = Get-ChildItem -Path "HKU:" | Where-Object { $_.Name -notmatch "_Classes" }
+
+foreach ($user in $users) {
+    $userSID = $user.PSChildName
+    $userName = Get-UsernameFromSID -SID $userSID
+    $uninstallPaths = @(
+        @{ Path = "HKU:\$userSID\Software\Microsoft\Windows\CurrentVersion\Uninstall"; Source = "Uninstall" },
+        @{ Path = "HKU:\$userSID\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"; Source = "WOW6432Node" }
+    )
+
+    foreach ($pathInfo in $uninstallPaths) {
+        $apps = Get-InstalledAppsFromRegistryPath -RegistryPath $pathInfo.Path -Source $pathInfo.Source
+        foreach ($app in $apps) {
+            $app.User = $userName
+        }
+        $allApps += $apps
+    }
+}
+
+# Output the results
+$allApps | Format-Table -AutoSize
